@@ -43,3 +43,42 @@ I developed a dynamic business intelligence dashboard to isolate the root causes
 ### **4. Interactive Features**
 *   **Metric Parameter:** A dynamic "switch" that allows the entire dashboard to toggle between **Sales**, **Profit**, and **Order Count** views.
 *   **Global Filters:** Users can drill down by **Year** or **Region** to see specific local trends.
+
+## The Visualization Process & Technical Logic
+**Step 1: Data Architecture & Connection**
+**Action:** Connected the Orders and Returns sheets.
+
+**Logic:** Applied a Left Join on Order ID. This ensures that all orders remain in the dataset as the denominator for the Return Rate, while only matching return records are brought in.
+
+**Step 2: Creating Parameters (User Input)**
+**Purpose:** To allow a single chart to switch between different metrics (Sales, Profit, # Orders).
+
+**Implementation:** Created a String Parameter titled Metric Selector with a list containing "Sales", "Profit", and "Order".
+
+**Step 3:** Building Calculated Fields (The Logic Layer)
+To make the dashboard dynamic and accurate, the following calculated fields were engineered:
+**1] Metric Choice (Switch Logic):**
+``` 
+CASE [Metric Selector]
+  WHEN "Sales" THEN SUM([Sales])
+  WHEN "Profit" THEN SUM([Profit])
+  WHEN "Order" THEN COUNTD([Order ID])
+END
+```
+
+* **Condition:** Used COUNTD (Count Distinct) for orders to ensure that an order with multiple line items is only counted once.
+
+* **Condition:** Wrapped Sales and Profit in SUM to avoid "mixing aggregate and non-aggregate" errors.
+
+**2]Return Rate:**
+```SUM(IF [Returned] = "Yes" THEN [Quantity] ELSE 0 END) / SUM([Quantity])```
+
+* **Logic:** Created a row-level IF statement to isolate returned quantities before aggregating them against total quantities.
+
+**Step 4: Interactive Dashboarding**
+* **Actions:** Set the State Map as a global filter.
+
+**Logic:** When a user clicks a "Red State" (e.g., Texas), Tableau passes that state's value as a filter to the Scatter Plot and Trend Chart, allowing for instantaneous root-cause analysis.
+
+## Conclusion
+This project demonstrates the transition from raw data to strategic insights. By utilizing CASE statements, Parameters, and Relational Joins, the dashboard provides a high-level executive summary while maintaining the "drill-down" capability required for deep-dive data investigation.
